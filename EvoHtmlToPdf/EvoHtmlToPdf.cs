@@ -37,7 +37,7 @@ namespace EvoHtmlToPdf
 
             var cookies = CookieHelper.GetApplicationCookies(ExecutingContext.CurrentApplicationName);
 
-            pdf.LicenseKey = EvoLicense; //"n7Stv6ysv66qrKe/rLGvv6yusa6tsaampqY=";
+            pdf.LicenseKey = EvoLicense;
 
             pdf.InterruptSlowJavaScript = false;
             pdf.JavaScriptEnabled = true;
@@ -45,7 +45,7 @@ namespace EvoHtmlToPdf
             pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
 
             var evoInternalDll = String.Format(@"{0}\HtmlToPdf\evointernal.dll", Context.HostHome);
-            var noloadPath = String.Format(@"{0}\Applications\EvoHtmlToPdf\evointernal.dll.noload", Context.HostHome);
+            var noloadPath = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dll.noload", Context.HostHome);
 
             if (!System.IO.File.Exists(evoInternalDll))
             {
@@ -56,6 +56,20 @@ namespace EvoHtmlToPdf
                 var bytes = InMemoryFileSystem.GetFileBytes(noloadPath, true);
 
                 File.WriteAllBytes(evoInternalDll, bytes);
+            }
+
+            var evoInternalDat = String.Format(@"{0}\HtmlToPdf\evointernal.dat", Context.HostHome);
+            var localPathDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
+
+            if (!System.IO.File.Exists(evoInternalDat))
+            {
+                var evoDir = Path.GetDirectoryName(evoInternalDat);
+
+                if (!Directory.Exists(evoDir)) Directory.CreateDirectory(evoDir);
+
+                var bytes = InMemoryFileSystem.GetFileBytes(localPathDat, true);
+
+                File.WriteAllBytes(evoInternalDat, bytes);
             }
 
             pdf.EvoInternalFileName = evoInternalDll;
