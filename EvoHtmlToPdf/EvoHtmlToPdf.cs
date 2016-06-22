@@ -6,7 +6,6 @@ using Aspectize.Core;
 using System.IO;
 using System.Web;
 using EvoPdf;
-using EvoPdf.HtmlToPdf;
 
 namespace EvoHtmlToPdf
 {
@@ -16,8 +15,14 @@ namespace EvoHtmlToPdf
         byte[] ConvertFromHtml(string html, string urlBase, [DefaultValueAttribute("File.pdf")] string fileName);
     }
 
+    public interface IEvoPdfFormFillService {
+
+        Dictionary<string, object> GetFormFields (Stream pdfForm);
+        byte[] FillFormFields (Stream pdfForm, Dictionary<string, object> fieldValues, [DefaultValueAttribute("File.pdf")] string fileName);
+    }
+
     [Service(Name = "EvoHtmlToPdfService", ConfigurationRequired = true)]
-    public class EvoHtmlToPdfService : IEvoHtmlToPdfService //, IInitializable, ISingleton
+    public class EvoHtmlToPdfService : IEvoHtmlToPdfService, IEvoPdfFormFillService //, IInitializable, ISingleton
     {
         public const string CookiesKey = "Cookies";
 
@@ -44,35 +49,9 @@ namespace EvoHtmlToPdf
             pdf.ConversionDelay = TimeoutInSeconds;
             pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
 
-            var evoInternalDll = String.Format(@"{0}\HtmlToPdf\evointernal.dll", Context.HostHome);
-            var noloadPath = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dll.noload", Context.HostHome);
-
-            if (!System.IO.File.Exists(evoInternalDll))
-            {
-                var evoDir = Path.GetDirectoryName(evoInternalDll);
-
-                if (!Directory.Exists(evoDir)) Directory.CreateDirectory(evoDir);
-
-                var bytes = InMemoryFileSystem.GetFileBytes(noloadPath, true);
-
-                File.WriteAllBytes(evoInternalDll, bytes);
-            }
-
-            //var evoInternalDat = String.Format(@"{0}\HtmlToPdf\evointernal.dat", Context.HostHome);
-            //var localPathDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
-
-            //if (!System.IO.File.Exists(evoInternalDat))
-            //{
-            //    var evoDir = Path.GetDirectoryName(evoInternalDat);
-
-            //    if (!Directory.Exists(evoDir)) Directory.CreateDirectory(evoDir);
-
-            //    var bytes = InMemoryFileSystem.GetFileBytes(localPathDat, true);
-
-            //    File.WriteAllBytes(evoInternalDat, bytes);
-            //}
-
-            pdf.EvoInternalFileName = evoInternalDll;
+            var evoInternalDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
+                     
+            pdf.EvoInternalFileName = evoInternalDat;
 
             foreach (var kv in cookies)
             {
@@ -80,6 +59,15 @@ namespace EvoHtmlToPdf
             }
 
             return pdf;
+        }
+
+        Document getPdfDocument (Stream pdf) {
+
+            var doc = new Document(pdf);
+
+            doc.LicenseKey = EvoLicense;
+
+            return doc;
         }
 
         byte[] IEvoHtmlToPdfService.ConvertFromUrl(string urlArg, string fileName)
@@ -102,6 +90,57 @@ namespace EvoHtmlToPdf
             var pdfBytes = getPdfConverter().GetPdfBytesFromHtmlString(html, urlBase);
             
             return pdfBytes;
+        }
+
+        Dictionary<string, object> IEvoPdfFormFillService.GetFormFields (Stream pdfForm) {
+
+            var fields = new Dictionary<string, object>();
+
+            Document pdfDoc = null;
+
+            try {
+
+                pdfDoc = getPdfDocument (pdfForm);
+
+                foreach (PdfFormField f in pdfDoc.Form.Fields) {
+
+                    fields.Add(f.Name, f.Value);
+                }
+
+            } finally {
+
+                if (pdfDoc != null) pdfDoc.Close();
+            }
+
+            return fields;
+        }
+
+        byte[] IEvoPdfFormFillService.FillFormFields (Stream pdfForm, Dictionary <string, object> fieldValues, string fileName) {
+
+            ExecutingContext.SetHttpDownloadFileName(fileName);
+
+            var fields = new Dictionary<string, object>();
+
+            Document pdfDoc = null;
+
+            try {
+
+                pdfDoc = getPdfDocument(pdfForm);
+
+                foreach (PdfFormField f in pdfDoc.Form.Fields) {
+
+                    if(fieldValues.ContainsKey (f.Name)) {
+
+                        pdfDoc.Form.Fields[f.Name].Value = fieldValues[f.Name];
+                    }
+                }
+
+                return pdfDoc.Save();
+
+            } finally {
+
+                if (pdfDoc != null) pdfDoc.Close();
+            }
         }
     }
 
