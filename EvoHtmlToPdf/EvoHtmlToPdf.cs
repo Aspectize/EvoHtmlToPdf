@@ -49,6 +49,22 @@ namespace EvoHtmlToPdf
             pdf.ConversionDelay = TimeoutInSeconds;
             pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
 
+            // Ce code ne marche pas et devrait marcher !
+
+            //TextElement footerText = new TextElement(0, pdfConverter.PdfFooterOptions.FooterHeight - 15, "This is page &p; of &P;  ", new System.Drawing.Font(new System.Drawing.FontFamily("Times New Roman"), 10, System.Drawing.GraphicsUnit.Point));
+            //footerText.EmbedSysFont = true;
+            //footerText.TextAlign = HorizontalTextAlign.Right;
+            //pdfConverter.PdfFooterOptions.AddElement(footerText);
+
+            //HtmlToPdfElement footerHtml = new HtmlToPdfElement(0, 0, 0, pdfConverter.PdfFooterOptions.FooterHeight, "<i>HTML in Footer</i>", null, 1024, 0);
+            //footerHtml.FitHeight = true;
+            //footerHtml.EmbedFonts = true;
+            //pdfConverter.PdfFooterOptions.AddElement(footerHtml);
+            //pdf.PdfDocumentOptions.ShowFooter = true;
+            //pdf.PdfDocumentOptions.BottomMargin = 100;
+            //pdf.PdfDocumentOptions.TopMargin = 100;
+
+
             var evoInternalDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
                      
             pdf.EvoInternalFileName = evoInternalDat;
