@@ -36,7 +36,7 @@ namespace EvoHtmlToPdf
         [Parameter(DefaultValue = 15)]
         public int TimeoutInSeconds = 15;
 
-        PdfConverter getPdfConverter()
+        PdfConverter getPdfConverter(int timeoutInSeconds)
         {
             var pdf = new PdfConverter();
 
@@ -46,11 +46,22 @@ namespace EvoHtmlToPdf
 
             pdf.InterruptSlowJavaScript = false;
             pdf.JavaScriptEnabled = true;
-            pdf.ConversionDelay = TimeoutInSeconds;
+            pdf.ConversionDelay = timeoutInSeconds;
             pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
 
             var evoInternalDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
-                     
+
+            if (!System.IO.File.Exists(evoInternalDat)) {
+
+                var evoDir = Path.GetDirectoryName(evoInternalDat);
+
+                if (!Directory.Exists(evoDir)) Directory.CreateDirectory(evoDir);
+
+                var bytes = InMemoryFileSystem.GetFileBytes(evoInternalDat, true);
+
+                File.WriteAllBytes(evoInternalDat, bytes);
+            }
+
             pdf.EvoInternalFileName = evoInternalDat;
 
             foreach (var kv in cookies)
@@ -78,7 +89,7 @@ namespace EvoHtmlToPdf
 
             //Context.Trace("EvoHtml2Pdf url: {0}", urlArg);
 
-            var pdfBytes = getPdfConverter().GetPdfBytesFromUrl(hostUrl);
+            var pdfBytes = getPdfConverter(TimeoutInSeconds).GetPdfBytesFromUrl(hostUrl);
 
             return pdfBytes;
         }
@@ -87,7 +98,7 @@ namespace EvoHtmlToPdf
         {
             ExecutingContext.SetHttpDownloadFileName(fileName);
 
-            var pdfBytes = getPdfConverter().GetPdfBytesFromHtmlString(html, urlBase);
+            var pdfBytes = getPdfConverter(0).GetPdfBytesFromHtmlString(html, urlBase);
             
             return pdfBytes;
         }
