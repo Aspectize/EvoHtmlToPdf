@@ -66,9 +66,9 @@
       <HintPath>..\..\..\Delivery\bin\BootHost.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="evohtmltopdf">
-      <HintPath>Lib\evohtmltopdf.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="evohtmltopdf, Version=6.16.0.0, Culture=neutral, PublicKeyToken=e1fcbb86597de299, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\DriveS\Delivery\Applications\EvoHtmlToPdf\Lib\evohtmltopdf.dll</HintPath>
     </Reference>
     <Reference Include="SmartBlocksCore">
       <HintPath>..\..\..\Delivery\Aspectize.core\SmartBlocksCore.dll</HintPath>
@@ -76,9 +76,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>

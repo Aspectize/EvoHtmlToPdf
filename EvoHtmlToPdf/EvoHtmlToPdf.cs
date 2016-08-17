@@ -51,18 +51,24 @@ namespace EvoHtmlToPdf
 
             // Ce code ne marche pas et devrait marcher !
 
-            //TextElement footerText = new TextElement(0, pdfConverter.PdfFooterOptions.FooterHeight - 15, "This is page &p; of &P;  ", new System.Drawing.Font(new System.Drawing.FontFamily("Times New Roman"), 10, System.Drawing.GraphicsUnit.Point));
+            //TextElement footerText = new TextElement(0, pdf.PdfFooterOptions.FooterHeight - 15, "This is page &p; of &P;  ", new System.Drawing.Font(new System.Drawing.FontFamily("Times New Roman"), 10, System.Drawing.GraphicsUnit.Point));
             //footerText.EmbedSysFont = true;
             //footerText.TextAlign = HorizontalTextAlign.Right;
-            //pdfConverter.PdfFooterOptions.AddElement(footerText);
+            //pdf.PdfFooterOptions.AddElement(footerText);
 
-            //HtmlToPdfElement footerHtml = new HtmlToPdfElement(0, 0, 0, pdfConverter.PdfFooterOptions.FooterHeight, "<i>HTML in Footer</i>", null, 1024, 0);
-            //footerHtml.FitHeight = true;
-            //footerHtml.EmbedFonts = true;
-            //pdfConverter.PdfFooterOptions.AddElement(footerHtml);
-            //pdf.PdfDocumentOptions.ShowFooter = true;
-            //pdf.PdfDocumentOptions.BottomMargin = 100;
-            //pdf.PdfDocumentOptions.TopMargin = 100;
+            var pageNumbers = new HtmlToPdfVariableElement("<p style = 'text-align:right;'>page &p; of &P;</p>", null);
+            pageNumbers.FitHeight = true;
+            pdf.PdfFooterOptions.FooterHeight = 50;
+            pdf.PdfFooterOptions.AddElement(pageNumbers);
+
+            var footerHtml = new HtmlToPdfElement(0, 0, 0, pdf.PdfFooterOptions.FooterHeight, "<i>HTML in Footer</i>", null, 1024, 0);
+            footerHtml.FitHeight = true;
+            footerHtml.EmbedFonts = true;
+            pdf.PdfFooterOptions.AddElement(footerHtml);
+
+            // pdf.PdfDocumentOptions.ShowFooter = true;
+            pdf.PdfDocumentOptions.BottomMargin = 100;
+            pdf.PdfDocumentOptions.TopMargin = 100;
 
 
             var evoInternalDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
@@ -114,7 +120,9 @@ namespace EvoHtmlToPdf
         {
             ExecutingContext.SetHttpDownloadFileName(fileName);
 
-            var pdfBytes = getPdfConverter(0).GetPdfBytesFromHtmlString(html, urlBase);
+            var pdf = getPdfConverter(0);
+            
+            var pdfBytes = pdf.GetPdfBytesFromHtmlString(html, urlBase);
             
             return pdfBytes;
         }
