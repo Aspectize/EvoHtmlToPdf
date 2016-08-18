@@ -47,29 +47,7 @@ namespace EvoHtmlToPdf
             pdf.InterruptSlowJavaScript = false;
             pdf.JavaScriptEnabled = true;
             pdf.ConversionDelay = timeoutInSeconds;
-            pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
-
-            // Ce code ne marche pas et devrait marcher !
-
-            //TextElement footerText = new TextElement(0, pdf.PdfFooterOptions.FooterHeight - 15, "This is page &p; of &P;  ", new System.Drawing.Font(new System.Drawing.FontFamily("Times New Roman"), 10, System.Drawing.GraphicsUnit.Point));
-            //footerText.EmbedSysFont = true;
-            //footerText.TextAlign = HorizontalTextAlign.Right;
-            //pdf.PdfFooterOptions.AddElement(footerText);
-
-            var pageNumbers = new HtmlToPdfVariableElement("<p style = 'text-align:right;'>page &p; of &P;</p>", null);
-            pageNumbers.FitHeight = true;
-            pdf.PdfFooterOptions.FooterHeight = 50;
-            pdf.PdfFooterOptions.AddElement(pageNumbers);
-
-            var footerHtml = new HtmlToPdfElement(0, 0, 0, pdf.PdfFooterOptions.FooterHeight, "<i>HTML in Footer</i>", null, 1024, 0);
-            footerHtml.FitHeight = true;
-            footerHtml.EmbedFonts = true;
-            pdf.PdfFooterOptions.AddElement(footerHtml);
-
-            // pdf.PdfDocumentOptions.ShowFooter = true;
-            pdf.PdfDocumentOptions.BottomMargin = 100;
-            pdf.PdfDocumentOptions.TopMargin = 100;
-
+            pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;          
 
             var evoInternalDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
 
@@ -83,6 +61,31 @@ namespace EvoHtmlToPdf
 
                 File.WriteAllBytes(evoInternalDat, bytes);
             }
+
+            var pageNumbers = new HtmlToPdfVariableElement("<p style = 'text-align:right;'>page &p; of &P;</p>", null);
+            pageNumbers.FitHeight = true;
+            pageNumbers.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+
+            pdf.PdfFooterOptions.FooterHeight = 50;
+            pdf.PdfFooterOptions.AddElement(pageNumbers);
+
+            var fWidth = pdf.PdfDocumentOptions.PdfPageSize.Width - pdf.PdfDocumentOptions.LeftMargin - pdf.PdfDocumentOptions.RightMargin;
+
+            LineElement fLine = new LineElement(0, 0, fWidth, 0);
+            fLine.ForeColor = new PdfColor(255, 0, 0);
+
+            pdf.PdfFooterOptions.AddElement(fLine);
+
+            var footerHtml = new HtmlToPdfElement(0, 0, 0, pdf.PdfFooterOptions.FooterHeight, "<i>HTML in Footer</i>", null, 1024, 0);
+            footerHtml.FitHeight = true;
+            footerHtml.EmbedFonts = true;
+            footerHtml.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+
+            pdf.PdfFooterOptions.AddElement(footerHtml);
+
+            pdf.PdfDocumentOptions.ShowFooter = true;
+            pdf.PdfDocumentOptions.BottomMargin = 100;
+            pdf.PdfDocumentOptions.TopMargin = 100;
 
             pdf.EvoInternalFileName = evoInternalDat;
 
