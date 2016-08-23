@@ -11,8 +11,8 @@ namespace EvoHtmlToPdf
 {
     public interface IEvoHtmlToPdfService
     {
-        byte[] ConvertFromUrl(string urlArg, [DefaultValueAttribute("File.pdf")] string fileName);
-        byte[] ConvertFromHtml(string html, string urlBase, [DefaultValueAttribute("File.pdf")] string fileName);
+        byte[] ConvertFromUrl(string urlArg, [DefaultValueAttribute("File.pdf")] string fileName, Dictionary<string, object> pdfDocumentOptions);
+        byte[] ConvertFromHtml(string html, string urlBase, [DefaultValueAttribute("File.pdf")] string fileName, Dictionary<string, object> pdfDocumentOptions);
     }
 
     public interface IEvoPdfFormFillService {
@@ -36,7 +36,7 @@ namespace EvoHtmlToPdf
         [Parameter(DefaultValue = 15)]
         public int TimeoutInSeconds = 15;
 
-        PdfConverter getPdfConverter(int timeoutInSeconds)
+        PdfConverter getPdfConverter(int timeoutInSeconds, Dictionary<string, object> pdfDocumentOptions)
         {
             var pdf = new PdfConverter();
 
@@ -62,30 +62,66 @@ namespace EvoHtmlToPdf
                 File.WriteAllBytes(evoInternalDat, bytes);
             }
 
-            var pageNumbers = new HtmlToPdfVariableElement("<p style = 'text-align:right;'>page &p; of &P;</p>", null);
-            pageNumbers.FitHeight = true;
-            pageNumbers.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+            if (pdfDocumentOptions != null && pdfDocumentOptions.Count > 0)
+            {
+                var flags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly;
 
-            pdf.PdfFooterOptions.FooterHeight = 50;
-            pdf.PdfFooterOptions.AddElement(pageNumbers);
+                var properties = pdf.PdfDocumentOptions.GetType().GetProperties(flags);
 
-            var fWidth = pdf.PdfDocumentOptions.PdfPageSize.Width - pdf.PdfDocumentOptions.LeftMargin - pdf.PdfDocumentOptions.RightMargin;
+                var list = new List<string>();
 
-            LineElement fLine = new LineElement(0, 0, fWidth, 0);
-            fLine.ForeColor = new PdfColor(255, 0, 0);
+                foreach (var p in properties)
+                {
+                    if (pdfDocumentOptions.ContainsKey(p.Name))
+                    {
+                        p.SetValue(pdf.PdfDocumentOptions, pdfDocumentOptions[p.Name], null);
+                    }
+                }
 
-            pdf.PdfFooterOptions.AddElement(fLine);
+                if (pdfDocumentOptions.ContainsKey("PdfHeaderOptions"))
+                {
+                    var headerHtml = new HtmlToPdfElement(pdfDocumentOptions["PdfHeaderOptions"].ToString(), "");
+                    headerHtml.FitHeight = true;
+                    headerHtml.FitWidth = true;
+                    headerHtml.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+                    pdf.PdfHeaderOptions.AddElement(headerHtml);
+                }
 
-            var footerHtml = new HtmlToPdfElement(0, 0, 0, pdf.PdfFooterOptions.FooterHeight, "<i>HTML in Footer</i>", null, 1024, 0);
-            footerHtml.FitHeight = true;
-            footerHtml.EmbedFonts = true;
-            footerHtml.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+                if (pdfDocumentOptions.ContainsKey("PdfFooterOptions"))
+                {
+                    var footerHtml = new HtmlToPdfElement(pdfDocumentOptions["PdfFooterOptions"].ToString(), "");
+                    //var footerHtml = new HtmlToPdfElement(0, 0, 0, 1500, pdfDocumentOptions["PdfFooterOptions"].ToString(), null);
+                    footerHtml.FitHeight = true;
+                    footerHtml.FitWidth = true;
+                    footerHtml.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+                    pdf.PdfFooterOptions.AddElement(footerHtml);
+                }
+            }
 
-            pdf.PdfFooterOptions.AddElement(footerHtml);
+            //var pageNumbers = new HtmlToPdfVariableElement("<p style = 'text-align:right;'>page &p; of &P;</p>", null);
+            //pageNumbers.FitHeight = true;
+            //pageNumbers.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
 
-            pdf.PdfDocumentOptions.ShowFooter = true;
-            pdf.PdfDocumentOptions.BottomMargin = 100;
-            pdf.PdfDocumentOptions.TopMargin = 100;
+            //pdf.PdfFooterOptions.FooterHeight = 50;
+            //pdf.PdfFooterOptions.AddElement(pageNumbers);
+
+            //var fWidth = pdf.PdfDocumentOptions.PdfPageSize.Width - pdf.PdfDocumentOptions.LeftMargin - pdf.PdfDocumentOptions.RightMargin;
+
+            //LineElement fLine = new LineElement(0, 0, fWidth, 0);
+            //fLine.ForeColor = new PdfColor(255, 0, 0);
+
+            //pdf.PdfFooterOptions.AddElement(fLine);
+
+            //var footerHtml = new HtmlToPdfElement(0, 0, 0, pdf.PdfFooterOptions.FooterHeight, "<i>HTML in Footer</i>", null, 1024, 0);
+            //footerHtml.FitHeight = true;
+            //footerHtml.EmbedFonts = true;
+            //footerHtml.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+
+            //pdf.PdfFooterOptions.AddElement(footerHtml);
+
+            //pdf.PdfDocumentOptions.ShowFooter = true;
+            //pdf.PdfDocumentOptions.BottomMargin = 100;
+            //pdf.PdfDocumentOptions.TopMargin = 100;
 
             pdf.EvoInternalFileName = evoInternalDat;
 
@@ -106,7 +142,7 @@ namespace EvoHtmlToPdf
             return doc;
         }
 
-        byte[] IEvoHtmlToPdfService.ConvertFromUrl(string urlArg, string fileName)
+        byte[] IEvoHtmlToPdfService.ConvertFromUrl(string urlArg, string fileName, Dictionary<string, object> pdfDocumentOptions)
         {
             ExecutingContext.SetHttpDownloadFileName(fileName);
 
@@ -114,16 +150,16 @@ namespace EvoHtmlToPdf
 
             //Context.Trace("EvoHtml2Pdf url: {0}", urlArg);
 
-            var pdfBytes = getPdfConverter(TimeoutInSeconds).GetPdfBytesFromUrl(hostUrl);
+            var pdfBytes = getPdfConverter(TimeoutInSeconds, pdfDocumentOptions).GetPdfBytesFromUrl(hostUrl);
 
             return pdfBytes;
         }
 
-        byte[] IEvoHtmlToPdfService.ConvertFromHtml(string html, string urlBase, string fileName)
+        byte[] IEvoHtmlToPdfService.ConvertFromHtml(string html, string urlBase, string fileName, Dictionary<string, object> pdfDocumentOptions)
         {
             ExecutingContext.SetHttpDownloadFileName(fileName);
 
-            var pdf = getPdfConverter(0);
+            var pdf = getPdfConverter(0, pdfDocumentOptions);
             
             var pdfBytes = pdf.GetPdfBytesFromHtmlString(html, urlBase);
             
