@@ -81,19 +81,14 @@ namespace EvoHtmlToPdf
                 if (pdfDocumentOptions.ContainsKey("PdfHeaderOptions"))
                 {
                     var headerHtml = new HtmlToPdfElement(pdfDocumentOptions["PdfHeaderOptions"].ToString(), "");
-                    headerHtml.FitHeight = true;
-                    headerHtml.FitWidth = true;
-                    headerHtml.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+                    headerHtml.EvoInternalFileName = evoInternalDat;
                     pdf.PdfHeaderOptions.AddElement(headerHtml);
                 }
 
                 if (pdfDocumentOptions.ContainsKey("PdfFooterOptions"))
                 {
                     var footerHtml = new HtmlToPdfElement(pdfDocumentOptions["PdfFooterOptions"].ToString(), "");
-                    //var footerHtml = new HtmlToPdfElement(0, 0, 0, 1500, pdfDocumentOptions["PdfFooterOptions"].ToString(), null);
-                    footerHtml.FitHeight = true;
-                    footerHtml.FitWidth = true;
-                    footerHtml.EvoInternalFileName = evoInternalDat; // code necessaire et qui manquait !!
+                    footerHtml.EvoInternalFileName = evoInternalDat; 
                     pdf.PdfFooterOptions.AddElement(footerHtml);
                 }
             }
