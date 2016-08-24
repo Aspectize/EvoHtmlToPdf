@@ -30,6 +30,11 @@ namespace EvoHtmlToPdf
         public const string LicenseKey = "License";
         public const string TimeoutKey = "TimeoutInSeconds";
 
+        const string HeaderHtml = "PdfHeaderOptions.Html";
+        const string HeaderHeight = "PdfHeaderOptions.Height";
+        const string FooterHtml = "PdfFooterOptions.Html";
+        const string FooterHeight = "PdfFooterOptions.Height";
+        
         [Parameter]
         public string EvoLicense = null;
 
@@ -46,7 +51,12 @@ namespace EvoHtmlToPdf
 
             pdf.InterruptSlowJavaScript = false;
             pdf.JavaScriptEnabled = true;
+
             pdf.ConversionDelay = timeoutInSeconds;
+
+            if(timeoutInSeconds != 0)
+              pdf.TriggeringMode = TriggeringMode.Manual;
+
             pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;          
 
             var evoInternalDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
@@ -78,18 +88,26 @@ namespace EvoHtmlToPdf
                     }
                 }
 
-                if (pdfDocumentOptions.ContainsKey("PdfHeaderOptions"))
+                if (pdfDocumentOptions.ContainsKey(HeaderHtml))
                 {
-                    var headerHtml = new HtmlToPdfElement(pdfDocumentOptions["PdfHeaderOptions"].ToString(), "");
+                    var headerHtml = new HtmlToPdfElement(pdfDocumentOptions[HeaderHtml].ToString(), "");
                     headerHtml.EvoInternalFileName = evoInternalDat;
                     pdf.PdfHeaderOptions.AddElement(headerHtml);
                 }
 
-                if (pdfDocumentOptions.ContainsKey("PdfFooterOptions"))
+                if (pdfDocumentOptions.ContainsKey(HeaderHeight)) {
+                    pdf.PdfHeaderOptions.HeaderHeight = (float)pdfDocumentOptions[HeaderHeight];
+                }
+
+                if (pdfDocumentOptions.ContainsKey(FooterHtml))
                 {
-                    var footerHtml = new HtmlToPdfElement(pdfDocumentOptions["PdfFooterOptions"].ToString(), "");
+                    var footerHtml = new HtmlToPdfElement(pdfDocumentOptions[FooterHtml].ToString(), "");
                     footerHtml.EvoInternalFileName = evoInternalDat; 
                     pdf.PdfFooterOptions.AddElement(footerHtml);
+                }
+
+                if (pdfDocumentOptions.ContainsKey(FooterHeight)) {
+                    pdf.PdfFooterOptions.FooterHeight = (float)pdfDocumentOptions[FooterHeight];
                 }
             }
 
