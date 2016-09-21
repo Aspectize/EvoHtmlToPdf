@@ -163,7 +163,7 @@ namespace EvoHtmlToPdf
 
             //Context.Trace("EvoHtml2Pdf url: {0}", urlArg);
 
-            var pdfBytes = getPdfConverter(TimeoutInSeconds, pdfDocumentOptions).GetPdfBytesFromUrl(hostUrl);
+            var pdfBytes = getPdfConverter(TimeoutInSeconds, pdfDocumentOptions).ConvertUrl(hostUrl);
 
             return pdfBytes;
         }
