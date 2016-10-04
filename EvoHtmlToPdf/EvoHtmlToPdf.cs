@@ -162,7 +162,7 @@ namespace EvoHtmlToPdf
             //var hostUrl = String.Format("{0}{1}/app.ashx?{2}", ExecutingContext.CurrentHostUrl, Context.CurrentApplication.Name, HttpUtility.UrlDecode(urlArg));
             var hostUrl = HttpUtility.UrlDecode(urlArg);
 
-            if (!hostUrl.ToLower().Trim().StartsWith("http:"))
+            if (!hostUrl.ToLower().Trim().StartsWith("http:") && !hostUrl.ToLower().Trim().StartsWith("https:"))
             {
                 hostUrl = String.Format("{0}{1}/app.ashx?{2}", ExecutingContext.CurrentHostUrl, Context.CurrentApplication.Name, HttpUtility.UrlDecode(urlArg));
             }
