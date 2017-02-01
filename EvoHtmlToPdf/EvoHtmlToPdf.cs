@@ -55,7 +55,7 @@ namespace EvoHtmlToPdf
             pdf.ConversionDelay = timeoutInSeconds;
 
             if(timeoutInSeconds != 0)
-              pdf.TriggeringMode = TriggeringMode.Manual;
+              pdf.TriggeringMode = TriggeringMode.Manual; // must call in javascript evoPdfConverter.startConversion() 
 
             pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;          
 
