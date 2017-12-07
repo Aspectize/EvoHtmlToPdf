@@ -32,7 +32,7 @@ You should fill the EvoLicense parameter with your own EvoLicense.
 
 ## 3 - Usage
 
-The Service can be used in 2 ways. Note that the URL way does not work on Azure Web App
+The Service can be used in 2 ways. Note that the URL way does not work on Azure Web App, and work only on Cloud Service.
 
 a/ Pdf is built from an URL
 
@@ -53,7 +53,7 @@ Global.MyService = {
         cmd.Attributes.aasDataName = 'MainData';
  
         cmd.OnComplete = function (result) {
-			      Aspectize.Host.ExecuteCommand('Browser/UIService.ShowView', 'MyViewToConvertIntoPdf');
+	    Aspectize.Host.ExecuteCommand('Browser/UIService.ShowView', 'MyViewToConvertIntoPdf');
 
             if (typeof evoPdfConverter != "undefined") {
               evoPdfConverter.startConversion();
