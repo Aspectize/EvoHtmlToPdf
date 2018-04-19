@@ -72,8 +72,8 @@ http://[yourHost]/[yourApp]/app.ashx?@MyService.MyCommand&myParam=someValue
 b/ Pdf is built from Html
 
 - build a string containing your html
-- provide a baseUrl
-- the pdfDocumentOptions contains the following options:
+- provide a baseUrl to display images
+- provide a dictionary with the following options:
 
 
 ```csharp
