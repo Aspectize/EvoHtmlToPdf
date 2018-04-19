@@ -71,6 +71,38 @@ http://[yourHost]/[yourApp]/app.ashx?@MyService.MyCommand&myParam=someValue
 
 b/ Pdf is built from Html
 
+- build a string containing your html
+- provide a baseUrl
+- the pdfDocumentOptions contains the following options:
 
 
+```csharp
+var dico = new Dictionary<string, object>();
+
+dico.Add("LeftMargin", 20);
+dico.Add("RightMargin", 20);
+dico.Add("TopMargin", 10);
+dico.Add("BottomMargin", 10);
+
+dico.Add("ShowHeader", true);
+
+var headerHtml = "some html header";
+
+dico.Add("PdfHeaderOptions.Html", headerHtml);
+dico.Add("PdfHeaderOptions.Height", 130F);
+
+dico.Add("ShowFooter", true);
+
+var footerHtml = "some html footer";
+
+dico.Add("PdfFooterOptions.Html", footerHtml);
+dico.Add("PdfFooterOptions.Height", 15F);
+
+dico.Add("PdfPageOrientation", 1);
+
+var pdfService = (IEvoHtmlToPdfService)ExecutingContext.GetService<IEvoHtmlToPdfService>("EvoPdfService");
+
+var bytes = pdfService.ConvertFromHtml(html, baseUrl, fileName, dico);
+
+```
 
