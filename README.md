@@ -30,11 +30,23 @@ evoPdfService.TimeoutInSeconds = 30;
 
 You should fill the EvoLicense parameter with your own EvoLicense.
 
+c/ Add a Reference to EvoHtmlToPdfConverter.dll (located in the EvoHtmlPdf Directory) in your project
+
+Your service implements the IEvoHtmlToPdfService interface:
+
+```csharp
+public interface IEvoHtmlToPdfService
+    {
+        byte[] ConvertFromHtml(string html, string urlBase, [DefaultValue("File.pdf")] string fileName, Dictionary<string, object> pdfDocumentOptions);
+        byte[] ConvertFromUrl(string urlArg, [DefaultValue("File.pdf")] string fileName, Dictionary<string, object> pdfDocumentOptions);
+    }
+```
+
 ## 3 - Usage
 
 The Service can be used in 2 ways. Note that the URL way does not work on Azure Web App, and work only on Cloud Service.
 
-a/ Pdf is built from an URL
+a/ Pdf is built from an URL with the ConvertFromUrl method
 
 - Write a client Service that display some View; you may use a Server Command to get some data from the server
 - Your command should have the aasCommandAttributes with CanExecuteOnStart set to true
@@ -47,7 +59,7 @@ Global.MyService = {
 
     MyCommand: function(myParam) {
         
-		var cmd = Aspectize.Host.PrepareCommand();
+	var cmd = Aspectize.Host.PrepareCommand();
 
         cmd.Attributes.aasMergeData = true;
         cmd.Attributes.aasDataName = 'MainData';
@@ -64,12 +76,12 @@ Global.MyService = {
 }
 
 ```
-- on the server, call the ConvertFromUrl Command from your Configured Service EvoPdfService, with the following parameters:
+- on the server, call the ConvertFromUrl Command from your Configured Service EvoPdfService, with the following urlArg parameter:
 
 http://[yourHost]/[yourApp]/app.ashx?@MyService.MyCommand&myParam=someValue
 
 
-b/ Pdf is built from Html
+b/ Pdf is built from Html with the ConvertFromHtml method
 
 - build a string containing your html
 - provide a baseUrl to display images
