@@ -87,11 +87,13 @@ namespace EvoHtmlToPdf
                         p.SetValue(pdf.PdfDocumentOptions, pdfDocumentOptions[p.Name], null);
                     }
                 }
-
+                
                 if (pdfDocumentOptions.ContainsKey(HeaderHtml))
                 {
                     var headerHtml = new HtmlToPdfElement(pdfDocumentOptions[HeaderHtml].ToString(), "");
                     headerHtml.EvoInternalFileName = evoInternalDat;
+                    //headerHtml.FitWidth = true;
+                    //headerHtml.FitHeight = true;
                     pdf.PdfHeaderOptions.AddElement(headerHtml);
                 }
 
@@ -101,7 +103,12 @@ namespace EvoHtmlToPdf
 
                 if (pdfDocumentOptions.ContainsKey(FooterHtml))
                 {
-                    var footerHtml = new HtmlToPdfElement(pdfDocumentOptions[FooterHtml].ToString(), "");
+                    HtmlToPdfVariableElement footerHtml = new HtmlToPdfVariableElement(pdfDocumentOptions[FooterHtml].ToString(), "");
+                    //footerHtml.FitHeight = true;
+                    //footerHtml.FitWidth = true;
+                    //pdf.PdfFooterOptions.AddElement(footerHtml);
+
+                    //var footerHtml = new HtmlToPdfElement(pdfDocumentOptions[FooterHtml].ToString(), "");
                     footerHtml.EvoInternalFileName = evoInternalDat; 
                     pdf.PdfFooterOptions.AddElement(footerHtml);
                 }
