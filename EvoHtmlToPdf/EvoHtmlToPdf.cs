@@ -229,6 +229,8 @@ namespace EvoHtmlToPdf
                     }
                 }
 
+                pdfDoc.Form.FlattenFields();
+
                 return pdfDoc.Save();
 
             } finally {
