@@ -236,7 +236,7 @@ namespace EvoHtmlToPdf
                     }
                 }
 
-                pdfDoc.Form.FlattenFields();
+                //pdfDoc.Form.FlattenFields();
 
                 return pdfDoc.Save();
 
