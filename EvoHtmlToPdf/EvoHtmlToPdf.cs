@@ -205,7 +205,11 @@ namespace EvoHtmlToPdf
 
                 foreach (PdfFormField f in pdfDoc.Form.Fields) {
 
-                    fields.Add(f.Name, f.Value);
+                    if (!fields.ContainsKey(f.Name)) {
+                        fields.Add(f.Name, f.Value);
+                    } else {
+
+                    }
                 }
 
             } finally {
