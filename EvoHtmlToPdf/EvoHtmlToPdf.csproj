@@ -59,19 +59,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AspectizeCore">
-      <HintPath>..\..\..\Delivery\Aspectize.core\AspectizeCore.dll</HintPath>
+      <HintPath>$(AspectizeWebHost)\Aspectize.core\AspectizeCore.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="BootHost">
-      <HintPath>..\..\..\Delivery\bin\BootHost.dll</HintPath>
+      <HintPath>$(AspectizeWebHost)\bin\BootHost.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="evohtmltopdf, Version=6.16.0.0, Culture=neutral, PublicKeyToken=e1fcbb86597de299, processorArchitecture=MSIL">
+    <Reference Include="evohtmltopdf, Version=8.0.0.0, Culture=neutral, PublicKeyToken=e1fcbb86597de299, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\DriveS\Delivery\Applications\EvoHtmlToPdf\Lib\evohtmltopdf.dll</HintPath>
+      <HintPath>..\..\..\Delivery\Applications\EvoHtmlToPdf\evohtmltopdf.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SmartBlocksCore">
-      <HintPath>..\..\..\Delivery\Aspectize.core\SmartBlocksCore.dll</HintPath>
+      <HintPath>$(AspectizeWebHost)\Aspectize.core\SmartBlocksCore.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -98,13 +99,13 @@
   <ItemGroup>
     <None Include="EvoHtmlToPdf.snk" />
     <Content Include="Lib\evointernal.dat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <Content Include="Lib\evohtmltopdf.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
