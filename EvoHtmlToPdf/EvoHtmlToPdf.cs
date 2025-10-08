@@ -57,7 +57,14 @@ namespace EvoHtmlToPdf
             if(timeoutInSeconds != 0)
               pdf.TriggeringMode = TriggeringMode.Manual; // must call in javascript evoPdfConverter.startConversion() 
 
-            pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;          
+            pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
+            //pdf.PdfDocumentOptions.EmbedFonts = true;
+            //pdf.PdfDocumentOptions.PdfStandardSubset = PdfStandardSubset.Pdf_X_1a;
+
+
+            //pdf.WebFontsEnabled = true;
+            //pdf.PostScriptFontsEnabled = true;
+            //pdf.SvgFontsEnabled = true;
 
             var evoInternalDat = String.Format(@"{0}\Applications\EvoHtmlToPdf\Lib\evointernal.dat", Context.HostHome);
 
