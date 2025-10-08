@@ -7,22 +7,25 @@ using System.IO;
 using System.Web;
 using EvoPdf;
 
-namespace EvoHtmlToPdf
-{
-    public interface IEvoHtmlToPdfService
-    {
+namespace EvoHtmlToPdf {
+    public interface IEvoHtmlToPdfService {
         byte[] ConvertFromUrl(string urlArg, [DefaultValueAttribute("File.pdf")] string fileName, Dictionary<string, object> pdfDocumentOptions);
         byte[] ConvertFromHtml(string html, string urlBase, [DefaultValueAttribute("File.pdf")] string fileName, Dictionary<string, object> pdfDocumentOptions);
     }
 
     public interface IEvoPdfFormFillService {
 
-        Dictionary<string, object> GetFormFields (Stream pdfForm);
-        byte[] FillFormFields (Stream pdfForm, Dictionary<string, object> fieldValues, [DefaultValueAttribute("File.pdf")] string fileName);
+        Dictionary<string, object> GetFormFields(Stream pdfForm);
+        byte[] FillFormFields(Stream pdfForm, Dictionary<string, object> fieldValues, [DefaultValueAttribute("File.pdf")] string fileName);
+    }
+
+    public interface IFactureX {
+        byte[] TransformePdfStreamToFactureX(Stream pdfFacture, string xmlFacture);
+        byte[] TransformePdfBytesToFactureX(byte[] pdfFacture, string xmlFacture);
     }
 
     [Service(Name = "EvoHtmlToPdfService", ConfigurationRequired = true)]
-    public class EvoHtmlToPdfService : IEvoHtmlToPdfService, IEvoPdfFormFillService //, IInitializable, ISingleton
+    public class EvoHtmlToPdfService : IEvoHtmlToPdfService, IEvoPdfFormFillService, IFactureX //, IInitializable, ISingleton
     {
         public const string CookiesKey = "Cookies";
 
@@ -34,15 +37,14 @@ namespace EvoHtmlToPdf
         const string HeaderHeight = "PdfHeaderOptions.Height";
         const string FooterHtml = "PdfFooterOptions.Html";
         const string FooterHeight = "PdfFooterOptions.Height";
-        
+
         [Parameter]
         public string EvoLicense = null;
 
         [Parameter(DefaultValue = 15)]
         public int TimeoutInSeconds = 15;
 
-        PdfConverter getPdfConverter(int timeoutInSeconds, Dictionary<string, object> pdfDocumentOptions)
-        {
+        PdfConverter getPdfConverter(int timeoutInSeconds, Dictionary<string, object> pdfDocumentOptions) {
             var pdf = new PdfConverter();
 
             var cookies = CookieHelper.GetApplicationCookies(ExecutingContext.CurrentApplicationName);
@@ -54,8 +56,8 @@ namespace EvoHtmlToPdf
 
             pdf.ConversionDelay = timeoutInSeconds;
 
-            if(timeoutInSeconds != 0)
-              pdf.TriggeringMode = TriggeringMode.Manual; // must call in javascript evoPdfConverter.startConversion() 
+            if (timeoutInSeconds != 0)
+                pdf.TriggeringMode = TriggeringMode.Manual; // must call in javascript evoPdfConverter.startConversion() 
 
             pdf.PdfDocumentOptions.PdfPageSize = PdfPageSize.A4;
             //pdf.PdfDocumentOptions.EmbedFonts = true;
@@ -79,24 +81,20 @@ namespace EvoHtmlToPdf
                 File.WriteAllBytes(evoInternalDat, bytes);
             }
 
-            if (pdfDocumentOptions != null && pdfDocumentOptions.Count > 0)
-            {
+            if (pdfDocumentOptions != null && pdfDocumentOptions.Count > 0) {
                 var flags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly;
 
                 var properties = pdf.PdfDocumentOptions.GetType().GetProperties(flags);
 
                 var list = new List<string>();
 
-                foreach (var p in properties)
-                {
-                    if (pdfDocumentOptions.ContainsKey(p.Name))
-                    {
+                foreach (var p in properties) {
+                    if (pdfDocumentOptions.ContainsKey(p.Name)) {
                         p.SetValue(pdf.PdfDocumentOptions, pdfDocumentOptions[p.Name], null);
                     }
                 }
-                
-                if (pdfDocumentOptions.ContainsKey(HeaderHtml))
-                {
+
+                if (pdfDocumentOptions.ContainsKey(HeaderHtml)) {
                     var headerHtml = new HtmlToPdfElement(pdfDocumentOptions[HeaderHtml].ToString(), "");
                     headerHtml.EvoInternalFileName = evoInternalDat;
                     //headerHtml.FitWidth = true;
@@ -108,15 +106,14 @@ namespace EvoHtmlToPdf
                     pdf.PdfHeaderOptions.HeaderHeight = (float)pdfDocumentOptions[HeaderHeight];
                 }
 
-                if (pdfDocumentOptions.ContainsKey(FooterHtml))
-                {
+                if (pdfDocumentOptions.ContainsKey(FooterHtml)) {
                     HtmlToPdfVariableElement footerHtml = new HtmlToPdfVariableElement(pdfDocumentOptions[FooterHtml].ToString(), "");
                     //footerHtml.FitHeight = true;
                     //footerHtml.FitWidth = true;
                     //pdf.PdfFooterOptions.AddElement(footerHtml);
 
                     //var footerHtml = new HtmlToPdfElement(pdfDocumentOptions[FooterHtml].ToString(), "");
-                    footerHtml.EvoInternalFileName = evoInternalDat; 
+                    footerHtml.EvoInternalFileName = evoInternalDat;
                     pdf.PdfFooterOptions.AddElement(footerHtml);
                 }
 
@@ -152,15 +149,14 @@ namespace EvoHtmlToPdf
 
             pdf.EvoInternalFileName = evoInternalDat;
 
-            foreach (var kv in cookies)
-            {
+            foreach (var kv in cookies) {
                 pdf.HttpRequestCookies.Add(kv.Key, kv.Value.ToString());
             }
 
             return pdf;
         }
 
-        Document getPdfDocument (Stream pdf) {
+        Document getPdfDocument(Stream pdf) {
 
             var doc = new Document(pdf);
 
@@ -169,15 +165,13 @@ namespace EvoHtmlToPdf
             return doc;
         }
 
-        byte[] IEvoHtmlToPdfService.ConvertFromUrl(string urlArg, string fileName, Dictionary<string, object> pdfDocumentOptions)
-        {
+        byte[] IEvoHtmlToPdfService.ConvertFromUrl(string urlArg, string fileName, Dictionary<string, object> pdfDocumentOptions) {
             ExecutingContext.SetHttpDownloadFileName(fileName);
 
             //var hostUrl = String.Format("{0}{1}/app.ashx?{2}", ExecutingContext.CurrentHostUrl, Context.CurrentApplication.Name, HttpUtility.UrlDecode(urlArg));
             var hostUrl = HttpUtility.UrlDecode(urlArg);
 
-            if (!hostUrl.ToLower().Trim().StartsWith("http:") && !hostUrl.ToLower().Trim().StartsWith("https:"))
-            {
+            if (!hostUrl.ToLower().Trim().StartsWith("http:") && !hostUrl.ToLower().Trim().StartsWith("https:")) {
                 hostUrl = String.Format("{0}{1}/app.ashx?{2}", ExecutingContext.CurrentHostUrl, Context.CurrentApplication.Name, HttpUtility.UrlDecode(urlArg));
             }
 
@@ -189,18 +183,17 @@ namespace EvoHtmlToPdf
             return pdfBytes;
         }
 
-        byte[] IEvoHtmlToPdfService.ConvertFromHtml(string html, string urlBase, string fileName, Dictionary<string, object> pdfDocumentOptions)
-        {
+        byte[] IEvoHtmlToPdfService.ConvertFromHtml(string html, string urlBase, string fileName, Dictionary<string, object> pdfDocumentOptions) {
             ExecutingContext.SetHttpDownloadFileName(fileName);
 
             var pdf = getPdfConverter(0, pdfDocumentOptions);
-            
+
             var pdfBytes = pdf.GetPdfBytesFromHtmlString(html, urlBase);
-            
+
             return pdfBytes;
         }
 
-        Dictionary<string, object> IEvoPdfFormFillService.GetFormFields (Stream pdfForm) {
+        Dictionary<string, object> IEvoPdfFormFillService.GetFormFields(Stream pdfForm) {
 
             var fields = new Dictionary<string, object>();
 
@@ -208,7 +201,7 @@ namespace EvoHtmlToPdf
 
             try {
 
-                pdfDoc = getPdfDocument (pdfForm);
+                pdfDoc = getPdfDocument(pdfForm);
 
                 foreach (PdfFormField f in pdfDoc.Form.Fields) {
 
@@ -227,7 +220,7 @@ namespace EvoHtmlToPdf
             return fields;
         }
 
-        byte[] IEvoPdfFormFillService.FillFormFields (Stream pdfForm, Dictionary <string, object> fieldValues, string fileName) {
+        byte[] IEvoPdfFormFillService.FillFormFields(Stream pdfForm, Dictionary<string, object> fieldValues, string fileName) {
 
             ExecutingContext.SetHttpDownloadFileName(fileName);
 
@@ -241,7 +234,7 @@ namespace EvoHtmlToPdf
 
                 foreach (PdfFormField f in pdfDoc.Form.Fields) {
 
-                    if(fieldValues.ContainsKey (f.Name)) {
+                    if (fieldValues.ContainsKey(f.Name)) {
 
                         pdfDoc.Form.Fields[f.Name].Value = fieldValues[f.Name];
                     }
@@ -255,6 +248,102 @@ namespace EvoHtmlToPdf
 
                 if (pdfDoc != null) pdfDoc.Close();
             }
+        }
+
+        private void configureAttachmentProperties(object attachment) {
+
+            var attachmentType = attachment.GetType();
+
+            // Tenter de définir la description
+            var descProperty = attachmentType.GetProperty("Description");
+            if (descProperty != null && descProperty.CanWrite) {
+                descProperty.SetValue(attachment, "Factur-X XML Invoice Data", null);
+            }
+
+            // Tenter de définir le MIME type
+            var mimeTypeProperty = attachmentType.GetProperty("MimeType");
+            if (mimeTypeProperty != null && mimeTypeProperty.CanWrite) {
+                mimeTypeProperty.SetValue(attachment, "text/xml", null);
+            } else {
+                var contentTypeProperty = attachmentType.GetProperty("ContentType");
+                if (contentTypeProperty != null && contentTypeProperty.CanWrite) {
+                    contentTypeProperty.SetValue(attachment, "text/xml", null);
+                }
+            }
+        }
+
+        private void tryConfigureAttachment(Document pdfDoc, string attachmentName) {
+
+            var attachmentsProperty = pdfDoc.GetType().GetProperty("FileAttachments");
+
+            if (attachmentsProperty != null) {
+                var attachments = attachmentsProperty.GetValue(pdfDoc, null);
+
+                if (attachments != null) {
+                    var countProperty = attachments.GetType().GetProperty("Count");
+                    int count = (int)countProperty.GetValue(attachments, null);
+
+                    // Trouver la pièce jointe qu'on vient d'ajouter
+                    var indexerProperty = attachments.GetType().GetProperty("Item", new[] { typeof(int) });
+
+                    for (int i = 0; i < count; i++) {
+                        var attachment = indexerProperty.GetValue(attachments, new object[] { i });
+                        var nameProperty = attachment.GetType().GetProperty("Name");
+                        string name = nameProperty.GetValue(attachment, null) as string;
+
+                        if (name == attachmentName) {
+                            // Configurer les propriétés de la pièce jointe
+                            configureAttachmentProperties(attachment);
+                            return;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        private void addFacturXAttachment(Document pdfDoc, string xmlContent) {
+
+            byte[] xmlBytes = Encoding.UTF8.GetBytes(xmlContent);
+
+            // Créer la pièce jointe avec le nom requis pour Factur-X
+            var ims = new MemoryStream(xmlBytes);
+            pdfDoc.AddFileAttachment(
+                ims,
+                "factur-x.xml",  // Nom obligatoire pour Factur-X
+                "Factur-X XML Invoice Data"
+            );
+
+            tryConfigureAttachment(pdfDoc, "factur-x.xml");
+        }
+
+        byte[] IFactureX.TransformePdfStreamToFactureX(Stream pdfFacture, string xmlFacture) {
+
+            var pdfDoc = new Document(pdfFacture);
+
+            addFacturXAttachment(pdfDoc, xmlFacture);
+
+            var ms = new MemoryStream();
+            pdfDoc.Save(ms);
+
+            byte[] bytesFactureX = ms.ToArray();
+
+            return bytesFactureX;
+        }
+
+        byte[] IFactureX.TransformePdfBytesToFactureX(byte[] pdfFacture, string xmlFacture) {
+
+            var msIn = new MemoryStream(pdfFacture);
+            var pdfDoc = new Document(msIn);
+
+            addFacturXAttachment(pdfDoc, xmlFacture);
+
+            var msOut = new MemoryStream();
+            pdfDoc.Save(msOut);
+
+            byte[] bytesFactureX = msOut.ToArray();
+
+            return bytesFactureX;
         }
     }
 
