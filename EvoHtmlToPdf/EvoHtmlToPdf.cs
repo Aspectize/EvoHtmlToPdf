@@ -44,6 +44,9 @@ namespace EvoHtmlToPdf {
         [Parameter(DefaultValue = 15)]
         public int TimeoutInSeconds = 15;
 
+        [Parameter(DefaultValue = 120)]
+        public int NavigationTimeout = 120;
+
         PdfConverter getPdfConverter(int timeoutInSeconds, Dictionary<string, object> pdfDocumentOptions) {
             var pdf = new PdfConverter();
 
@@ -55,6 +58,7 @@ namespace EvoHtmlToPdf {
             pdf.JavaScriptEnabled = true;
 
             pdf.ConversionDelay = timeoutInSeconds;
+            pdf.NavigationTimeout = NavigationTimeout;
 
             if (timeoutInSeconds != 0)
                 pdf.TriggeringMode = TriggeringMode.Manual; // must call in javascript evoPdfConverter.startConversion() 
