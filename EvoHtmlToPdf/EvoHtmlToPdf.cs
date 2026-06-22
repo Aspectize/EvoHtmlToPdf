@@ -19,13 +19,13 @@ namespace EvoHtmlToPdf {
         byte[] FillFormFields(Stream pdfForm, Dictionary<string, object> fieldValues, [DefaultValueAttribute("File.pdf")] string fileName);
     }
 
-    public interface IFactureX {
-        byte[] TransformePdfStreamToFactureX(Stream pdfFacture, string xmlFacture);
-        byte[] TransformePdfBytesToFactureX(byte[] pdfFacture, string xmlFacture);
-    }
+    //public interface IFactureX {
+    //    byte[] TransformePdfStreamToFactureX(Stream pdfFacture, string xmlFacture);
+    //    byte[] TransformePdfBytesToFactureX(byte[] pdfFacture, string xmlFacture);
+    //}
 
     [Service(Name = "EvoHtmlToPdfService", ConfigurationRequired = true)]
-    public class EvoHtmlToPdfService : IEvoHtmlToPdfService, IEvoPdfFormFillService, IFactureX //, IInitializable, ISingleton
+    public class EvoHtmlToPdfService : IEvoHtmlToPdfService, IEvoPdfFormFillService//, IFactureX , IInitializable, ISingleton
     {
         public const string CookiesKey = "Cookies";
 
@@ -302,49 +302,94 @@ namespace EvoHtmlToPdf {
 
         }
 
+        private void setAttachmentMimeType(Document pdfDoc, string attachmentName, string mimeType) {
+
+            var attachmentsProperty = pdfDoc.GetType().GetProperty("FileAttachments");
+
+            if (attachmentsProperty != null) {
+                var attachments = attachmentsProperty.GetValue(pdfDoc, null);
+
+                if (attachments != null) {
+                    var countProperty = attachments.GetType().GetProperty("Count");
+                    int count = (int)countProperty.GetValue(attachments, null);
+                    var indexerProperty = attachments.GetType().GetProperty("Item", new[] { typeof(int) });
+
+                    for (int i = 0; i < count; i++) {
+                        var attachment = indexerProperty.GetValue(attachments, new object[] { i });
+                        var nameProperty = attachment.GetType().GetProperty("Name");
+                        string name = nameProperty.GetValue(attachment, null) as string;
+
+                        if (name == attachmentName) {
+                            // Tenter de définir le MimeType
+                            var mimeTypeProperty = attachment.GetType().GetProperty("MimeType");
+                            if (mimeTypeProperty != null && mimeTypeProperty.CanWrite) {
+                                mimeTypeProperty.SetValue(attachment, mimeType, null);
+                                return;
+                            }
+
+                            // Fallback : essayer ContentType
+                            var contentTypeProperty = attachment.GetType().GetProperty("ContentType");
+                            if (contentTypeProperty != null && contentTypeProperty.CanWrite) {
+                                contentTypeProperty.SetValue(attachment, mimeType, null);
+                                return;
+                            }
+
+                            // Fallback : essayer SubType
+                            var subTypeProperty = attachment.GetType().GetProperty("SubType");
+                            if (subTypeProperty != null && subTypeProperty.CanWrite) {
+                                subTypeProperty.SetValue(attachment, mimeType, null);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+        const string FacturXAttacmentName = "factur-x.xml";
+
         private void addFacturXAttachment(Document pdfDoc, string xmlContent) {
 
             byte[] xmlBytes = Encoding.UTF8.GetBytes(xmlContent);
 
             // Créer la pièce jointe avec le nom requis pour Factur-X
             var ims = new MemoryStream(xmlBytes);
-            pdfDoc.AddFileAttachment(
-                ims,
-                "factur-x.xml",  // Nom obligatoire pour Factur-X
-                "Factur-X XML Invoice Data"
-            );
+            pdfDoc.AddFileAttachment(ims, FacturXAttacmentName, "Factur-X XML Invoice Data");
+            setAttachmentMimeType(pdfDoc, FacturXAttacmentName, "application/xml");
 
             tryConfigureAttachment(pdfDoc, "factur-x.xml");
         }
 
-        byte[] IFactureX.TransformePdfStreamToFactureX(Stream pdfFacture, string xmlFacture) {
+        //byte[] IFactureX.TransformePdfStreamToFactureX(Stream pdfFacture, string xmlFacture) {
 
-            var pdfDoc = new Document(pdfFacture);
+        //    var pdfDoc = new Document(pdfFacture);
 
-            addFacturXAttachment(pdfDoc, xmlFacture);
+        //    addFacturXAttachment(pdfDoc, xmlFacture);
 
-            var ms = new MemoryStream();
-            pdfDoc.Save(ms);
+        //    var ms = new MemoryStream();
+        //    pdfDoc.Save(ms);
 
-            byte[] bytesFactureX = ms.ToArray();
+        //    byte[] bytesFactureX = ms.ToArray();
 
-            return bytesFactureX;
-        }
+        //    return bytesFactureX;
+        //}
 
-        byte[] IFactureX.TransformePdfBytesToFactureX(byte[] pdfFacture, string xmlFacture) {
+        //byte[] IFactureX.TransformePdfBytesToFactureX(byte[] pdfFacture, string xmlFacture) {
 
-            var msIn = new MemoryStream(pdfFacture);
-            var pdfDoc = new Document(msIn);
+        //    var msIn = new MemoryStream(pdfFacture);
+        //    var pdfDoc = new Document(msIn);
 
-            addFacturXAttachment(pdfDoc, xmlFacture);
+        //    addFacturXAttachment(pdfDoc, xmlFacture);
 
-            var msOut = new MemoryStream();
-            pdfDoc.Save(msOut);
+        //    var msOut = new MemoryStream();
+        //    pdfDoc.Save(msOut);
 
-            byte[] bytesFactureX = msOut.ToArray();
+        //    byte[] bytesFactureX = msOut.ToArray();
 
-            return bytesFactureX;
-        }
+        //    return bytesFactureX;
+        //}
     }
 
 }
